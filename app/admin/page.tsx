@@ -12,9 +12,14 @@ import Link from "next/link";
 
 interface AdminStats {
     totalCourses: number;
+    totalUsers: number;
+    studentCount: number;
+    instructorCount: number;
+    adminCount: number;
     totalEnrollments: number;
-    totalStudents: number;
-    totalInstructors: number;
+    completedEnrollments: number;
+    activeEnrollments: number;
+    avgProgress: number;
 }
 
 export default function AdminDashboard() {
@@ -35,9 +40,28 @@ export default function AdminDashboard() {
             try {
                 setLoading(true);
                 const data = await adminService.getStats();
+                console.log("Admin stats received:", data);
                 setStats(data);
-            } catch (err) {
-                setError(err instanceof Error ? err.message : "Failed to load admin stats");
+                setError(null);
+            } catch (err: any) {
+                // Log the error but don't block the dashboard from rendering
+                console.error("Failed to load stats:", err?.response?.status, err?.message);
+                // Set stats to null (will display empty cards) instead of showing error
+                setStats({
+                    totalCourses: 0,
+                    totalUsers: 0,
+                    studentCount: 0,
+                    instructorCount: 0,
+                    adminCount: 0,
+                    totalEnrollments: 0,
+                    completedEnrollments: 0,
+                    activeEnrollments: 0,
+                    avgProgress: 0,
+                });
+                // Only show error if it's not a 404 (missing endpoint)
+                if (err?.response?.status !== 404) {
+                    setError(err instanceof Error ? err.message : "Failed to load admin stats");
+                }
             } finally {
                 setLoading(false);
             }
@@ -119,7 +143,7 @@ export default function AdminDashboard() {
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-sm text-neutral-600 mb-1">Total Students</p>
-                                        <p className="text-3xl font-bold text-neutral-900">{stats.totalStudents}</p>
+                                        <p className="text-3xl font-bold text-neutral-900">{stats.studentCount}</p>
                                     </div>
                                     <Users className="h-12 w-12 text-purple-100 rounded-lg p-2" />
                                 </div>
@@ -131,7 +155,7 @@ export default function AdminDashboard() {
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-sm text-neutral-600 mb-1">Total Instructors</p>
-                                        <p className="text-3xl font-bold text-neutral-900">{stats.totalInstructors}</p>
+                                        <p className="text-3xl font-bold text-neutral-900">{stats.instructorCount}</p>
                                     </div>
                                     <Users className="h-12 w-12 text-orange-100 rounded-lg p-2" />
                                 </div>

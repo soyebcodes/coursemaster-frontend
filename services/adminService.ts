@@ -3,9 +3,14 @@ import { Course, Enrollment, AssignmentSubmission } from "@/types";
 
 export interface AdminStats {
   totalCourses: number;
+  totalUsers: number;
+  studentCount: number;
+  instructorCount: number;
+  adminCount: number;
   totalEnrollments: number;
-  totalStudents: number;
-  totalInstructors: number;
+  completedEnrollments: number;
+  activeEnrollments: number;
+  avgProgress: number;
 }
 
 export interface CreateCoursePayload {
@@ -42,7 +47,12 @@ export interface CreateBatchPayload {
 
 export const adminService = {
   async getStats(): Promise<AdminStats> {
-    const response = await api.get<AdminStats>("/admin/stats");
+    const response = await api.get<{ stats: AdminStats }>("/admin/stats");
+    return response.data.stats;
+  },
+
+  async getEnrollmentStats(): Promise<any> {
+    const response = await api.get<any>("/admin/enrollments/stats");
     return response.data;
   },
 
