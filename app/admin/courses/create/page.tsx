@@ -53,14 +53,26 @@ export default function AdminCreateCoursePage() {
         category: category.trim() || "General",
         price: typeof price === "number" ? price : Number(price) || 0,
         image: imageUrl.trim() || undefined,
-        instructor: instructor.trim() || (user?.name || ""),
+        // Backend determines instructor from the authenticated user; do not send `instructor` field
+        lessons: [],
+        batches: [],
       };
+
+      // Log payload to help debug server validation errors
+      // (will appear in browser console)
+      // eslint-disable-next-line no-console
+      console.log("Create course payload:", payload);
 
       const created = await adminService.createCourse(payload as any);
       // navigate back to courses list
       router.push("/admin/courses");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create course");
+    } catch (err: any) {
+      // If server returned validation errors, show them
+      const serverMessage =
+        err?.response?.data?.message || err?.response?.data || err?.message;
+      // eslint-disable-next-line no-console
+      console.error("Create course error:", err?.response || err);
+      setError(typeof serverMessage === "string" ? serverMessage : JSON.stringify(serverMessage));
     } finally {
       setLoading(false);
     }
