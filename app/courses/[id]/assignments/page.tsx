@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { assignmentService } from "@/services/assignmentService";
 import { Assignment, AssignmentSubmission } from "@/types";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
     Dialog,
@@ -30,12 +30,11 @@ export default function AssignmentsPage() {
     const [assignments, setAssignments] = useState<AssignmentWithSubmission[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [selectedAssignment, setSelectedAssignment] =
-        useState<AssignmentWithSubmission | null>(null);
+    const [selectedAssignment, setSelectedAssignment] = useState<AssignmentWithSubmission | null>(null);
     const [submitting, setSubmitting] = useState(false);
     const [formData, setFormData] = useState({
-        answer: "",
-        fileLink: "",
+        submissionText: "",
+        submissionLink: "",
     });
 
     useEffect(() => {
@@ -58,7 +57,7 @@ export default function AssignmentsPage() {
     }, [courseId]);
 
     const handleSubmit = async () => {
-        if (!selectedAssignment || !formData.answer.trim()) {
+        if (!selectedAssignment || !formData.submissionText.trim()) {
             alert("Please provide an answer");
             return;
         }
@@ -67,8 +66,8 @@ export default function AssignmentsPage() {
             setSubmitting(true);
             const submission = await assignmentService.submitAssignment({
                 assignmentId: selectedAssignment._id,
-                answer: formData.answer,
-                fileLink: formData.fileLink || undefined,
+                submissionText: formData.submissionText,
+                submissionLink: formData.submissionLink || undefined,
             });
 
             // Update local state
@@ -79,7 +78,7 @@ export default function AssignmentsPage() {
             );
 
             // Reset form and close dialog
-            setFormData({ answer: "", fileLink: "" });
+            setFormData({ submissionText: "", submissionLink: "" });
             setSelectedAssignment(null);
         } catch (err) {
             console.error("Failed to submit assignment:", err);
@@ -125,9 +124,7 @@ export default function AssignmentsPage() {
                 {assignments.length === 0 ? (
                     <Card>
                         <CardContent className="py-12 text-center">
-                            <p className="text-neutral-600 mb-4">
-                                No assignments available yet.
-                            </p>
+                            <p className="text-neutral-600">No assignments available yet.</p>
                         </CardContent>
                     </Card>
                 ) : (
@@ -165,21 +162,14 @@ export default function AssignmentsPage() {
                                                 {assignment.dueDate && (
                                                     <div className="flex items-center gap-2 text-sm text-neutral-500">
                                                         <Clock className="w-4 h-4" />
-                                                        <span>
-                                                            Due:{" "}
-                                                            {new Date(
-                                                                assignment.dueDate
-                                                            ).toLocaleDateString()}
-                                                        </span>
+                                                        <span>Due: {new Date(assignment.dueDate).toLocaleDateString()}</span>
                                                     </div>
                                                 )}
                                             </div>
 
                                             <Dialog>
                                                 <DialogTrigger asChild>
-                                                    <Button
-                                                        onClick={() => setSelectedAssignment(assignment)}
-                                                    >
+                                                    <Button onClick={() => setSelectedAssignment(assignment)}>
                                                         {isSubmitted ? "View Submission" : "Submit"}
                                                     </Button>
                                                 </DialogTrigger>
@@ -246,51 +236,51 @@ export default function AssignmentsPage() {
                                                         ) : (
                                                             <div className="space-y-4">
                                                                 <div>
-                                                                    <label className="text-sm font-medium text-neutral-700 block mb-2">
-                                                                        Your Answer
-                                                                    </label>
-                                                                    <Textarea
-                                                                        placeholder="Write your answer here..."
-                                                                        value={formData.answer}
-                                                                        onChange={(e) =>
-                                                                            setFormData({
-                                                                                ...formData,
-                                                                                answer: e.target.value,
-                                                                            })
-                                                                        }
-                                                                        rows={6}
-                                                                        disabled={submitting}
-                                                                    />
-                                                                </div>
+                                                                    <div className="mb-4">
+                                                                        <label className="text-sm font-medium text-neutral-700 block mb-2">
+                                                                            Your Answer
+                                                                        </label>
+                                                                        <Textarea
+                                                                            placeholder="Type your answer here..."
+                                                                            value={formData.submissionText}
+                                                                            onChange={(e) =>
+                                                                                setFormData({
+                                                                                    ...formData,
+                                                                                    submissionText: e.target.value,
+                                                                                })
+                                                                            }
+                                                                            disabled={submitting}
+                                                                            className="min-h-[120px]"
+                                                                        />
+                                                                    </div>
 
-                                                                <div>
-                                                                    <label className="text-sm font-medium text-neutral-700 block mb-2">
-                                                                        Google Drive Link (Optional)
-                                                                    </label>
-                                                                    <Input
-                                                                        placeholder="https://drive.google.com/..."
-                                                                        value={formData.fileLink}
-                                                                        onChange={(e) =>
-                                                                            setFormData({
-                                                                                ...formData,
-                                                                                fileLink: e.target.value,
-                                                                            })
-                                                                        }
-                                                                        disabled={submitting}
-                                                                    />
-                                                                </div>
+                                                                    <div className="mb-6">
+                                                                        <label className="text-sm font-medium text-neutral-700 block mb-2">
+                                                                            Google Drive Link (Optional)
+                                                                        </label>
+                                                                        <Input
+                                                                            placeholder="https://drive.google.com/..."
+                                                                            value={formData.submissionLink}
+                                                                            onChange={(e) =>
+                                                                                setFormData({
+                                                                                    ...formData,
+                                                                                    submissionLink: e.target.value,
+                                                                                })
+                                                                            }
+                                                                            disabled={submitting}
+                                                                        />
+                                                                    </div>
 
-                                                                <DialogFooter>
-                                                                    <Button
-                                                                        onClick={handleSubmit}
-                                                                        disabled={submitting}
-                                                                    >
-                                                                        <Send className="w-4 h-4 mr-2" />
-                                                                        {submitting
-                                                                            ? "Submitting..."
-                                                                            : "Submit Assignment"}
-                                                                    </Button>
-                                                                </DialogFooter>
+                                                                    <DialogFooter>
+                                                                        <Button
+                                                                            onClick={handleSubmit}
+                                                                            disabled={submitting}
+                                                                        >
+                                                                            <Send className="w-4 h-4 mr-2" />
+                                                                            {submitting ? "Submitting..." : "Submit Assignment"}
+                                                                        </Button>
+                                                                    </DialogFooter>
+                                                                </div>
                                                             </div>
                                                         )}
                                                     </DialogContent>

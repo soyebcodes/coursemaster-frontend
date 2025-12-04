@@ -3,8 +3,8 @@ import { Assignment, AssignmentSubmission } from "@/types";
 
 export interface SubmitAssignmentPayload {
   assignmentId: string;
-  answer: string;
-  fileLink?: string;
+  submissionText: string;
+  submissionLink?: string;
 }
 
 export const assignmentService = {
@@ -21,8 +21,8 @@ export const assignmentService = {
     const response = await api.post<AssignmentSubmission>(
       `/assignments/${payload.assignmentId}/submit`,
       {
-        answer: payload.answer,
-        fileLink: payload.fileLink,
+        submissionText: payload.submissionText,
+        submissionLink: payload.submissionLink,
       }
     );
     return response.data;
