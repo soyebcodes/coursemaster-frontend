@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { courseService, FetchCoursesParams } from "@/services/courseService";
 import { Course } from "@/types";
 
@@ -63,9 +63,9 @@ const courseSlice = createSlice({
   reducers: {
     // ... existing reducers ...
     resetState: () => initialState,
-    setSearch: (state, action) => {
+    setSearch: (state, action: PayloadAction<string>) => {
       state.filters.search = action.payload;
-      state.pagination.page = 1;
+      state.pagination.page = 1; // Reset to first page when search changes
     },
     setCategory: (state, action) => {
       state.filters.category = action.payload;

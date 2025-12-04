@@ -36,13 +36,13 @@ export default function CoursesPage() {
             try {
                 await dispatch(
                     fetchCourses({
-                        page: pagination?.page || 1,
-                        limit: pagination?.limit || 12,
-                        search: filters?.search || '',
-                        category: filters?.category || '',
-                        minPrice: filters?.minPrice || undefined,
-                        maxPrice: filters?.maxPrice || undefined,
-                        sort: filters?.sort || 'newest',
+                        page: pagination.page,
+                        limit: pagination.limit,
+                        search: filters.search || undefined, // Send undefined instead of empty string
+                        category: filters.category || undefined,
+                        minPrice: filters.minPrice || undefined,
+                        maxPrice: filters.maxPrice || undefined,
+                        sort: filters.sort,
                     })
                 );
             } catch (error) {
@@ -50,15 +50,31 @@ export default function CoursesPage() {
             }
         };
 
-        loadCourses();
-    }, [dispatch, pagination?.page, JSON.stringify(filters)]);
+        const debounceTimer = setTimeout(() => {
+            loadCourses();
+        }, 300);
+
+        return () => clearTimeout(debounceTimer);
+    }, [dispatch, pagination.page, pagination.limit, filters.search, filters.category, filters.minPrice, filters.maxPrice, filters.sort]);
 
     const handleSearch = useCallback(
         (value: string) => {
-            dispatch(setSearch(value));
+            // Debounce the search to avoid too many API calls
+            const timer = setTimeout(() => {
+                dispatch(setSearch(value.trim()));
+            }, 300);
+
+            return () => clearTimeout(timer);
         },
         [dispatch]
     );
+
+    // Handle immediate search when pressing Enter
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            dispatch(setSearch(e.currentTarget.value.trim()));
+        }
+    };
 
     const handleCategoryChange = useCallback(
         (value: string) => {
@@ -102,6 +118,7 @@ export default function CoursesPage() {
                                     className="pl-10"
                                     value={filters?.search || ""}
                                     onChange={(e) => handleSearch(e.target.value)}
+                                    onKeyDown={handleKeyDown}
                                     disabled={loading}
                                 />
                             </div>
