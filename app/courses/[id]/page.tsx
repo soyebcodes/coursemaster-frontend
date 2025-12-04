@@ -141,7 +141,12 @@ export default function CourseDetailPage() {
                         <div className="bg-white p-4 rounded-lg">
                             <p className="text-sm text-neutral-600">Price</p>
                             <p className="font-semibold text-neutral-900">
-                                ${typeof course.price === "number" ? course.price.toFixed(2) : "0.00"}
+                                {(() => {
+                                    const priceNumber = Number(course.price);
+                                    return Number.isFinite(priceNumber)
+                                        ? `$${priceNumber.toFixed(2)}`
+                                        : "Free";
+                                })()}
                             </p>
                         </div>
                         <div className="bg-white p-4 rounded-lg">

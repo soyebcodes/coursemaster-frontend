@@ -32,7 +32,7 @@ export interface Course {
   _id: string;
   title: string;
   description: string;
-  price: number;
+  price: number | string;
   category: string;
   instructor: string;
   tags: string[];
