@@ -64,6 +64,8 @@ export interface Enrollment {
   completedLessons: string[];
   enrollmentDate: string;
   completionDate?: string;
+  courseTitle?: string;
+  courseDescription?: string;
 }
 
 // Assignment Types

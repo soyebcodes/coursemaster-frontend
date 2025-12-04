@@ -8,13 +8,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { enrollmentService } from "@/services/enrollmentService";
-import { courseService } from "@/services/courseService";
-import type { Course, Enrollment } from "@/types";
+import type { Enrollment } from "@/types";
 
 export default function DashboardPage() {
     const { user } = useAuth();
     const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
-    const [coursesById, setCoursesById] = useState<Record<string, Course>>({});
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -26,28 +24,6 @@ export default function DashboardPage() {
                 setError(null);
                 const userEnrollments = await enrollmentService.getUserEnrollments();
                 setEnrollments(userEnrollments);
-
-                // Fetch course details for enrolled courses (simple client-side fan-out)
-                const uniqueCourseIds = Array.from(new Set(userEnrollments.map((e) => e.courseId)));
-                const courseEntries = await Promise.all(
-                    uniqueCourseIds.map(async (id) => {
-                        try {
-                            const course = await courseService.getCourseById(id);
-                            return [id, course] as const;
-                        } catch {
-                            return null;
-                        }
-                    })
-                );
-
-                const nextCourses: Record<string, Course> = {};
-                for (const entry of courseEntries) {
-                    if (entry) {
-                        const [id, course] = entry;
-                        nextCourses[id] = course;
-                    }
-                }
-                setCoursesById(nextCourses);
             } catch (err: any) {
                 setError(err?.response?.data?.message || "Failed to load your courses");
             } finally {
@@ -141,20 +117,17 @@ export default function DashboardPage() {
                             ) : (
                                 <div className="grid md:grid-cols-2 gap-4">
                                     {enrollments.map((enrollment) => {
-                                        const course = coursesById[enrollment.courseId];
-                                        if (!course) return null;
-
                                         return (
                                             <Link
                                                 key={enrollment._id}
-                                                href={`/courses/${course._id}/learn`}
+                                                href={`/courses/${enrollment.courseId}/learn`}
                                             >
                                                 <div className="border rounded-lg p-4 hover:shadow-sm transition-shadow bg-white">
                                                     <h3 className="font-semibold text-neutral-900 mb-1">
-                                                        {course.title}
+                                                        {enrollment.courseTitle ?? "Untitled course"}
                                                     </h3>
                                                     <p className="text-sm text-neutral-600 mb-2 line-clamp-2">
-                                                        {course.description}
+                                                        {enrollment.courseDescription ?? ""}
                                                     </p>
                                                     <p className="text-xs text-neutral-500">
                                                         Progress: {enrollment.progress ?? 0}%

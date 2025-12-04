@@ -7,7 +7,7 @@ export const enrollmentService = {
       data: Array<{
         _id: string;
         student: string;
-        course: { _id: string };
+        course: { _id: string; title: string; description: string };
         status: "active" | "completed" | "dropped";
         progress: any; // backend uses an array; we only care about percentageCompleted
         percentageCompleted: number;
@@ -33,6 +33,8 @@ export const enrollmentService = {
       completedLessons: [], // not provided; can be filled by another endpoint if needed
       enrollmentDate: item.enrolledAt,
       completionDate: undefined,
+      courseTitle: item.course.title,
+      courseDescription: item.course.description,
     }));
   },
 
