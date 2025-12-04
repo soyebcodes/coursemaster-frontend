@@ -158,6 +158,22 @@ export default function CourseDetailPage() {
                         </div>
                     </div>
 
+                    {/* Instructor and Batch Details */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <div className="bg-white p-4 rounded-lg">
+                            <p className="text-sm text-neutral-600">Instructor</p>
+                            <p className="font-semibold text-neutral-900">
+                                {course.instructor || "N/A"}
+                            </p>
+                        </div>
+                        <div className="bg-white p-4 rounded-lg">
+                            <p className="text-sm text-neutral-600">Batch</p>
+                            <p className="font-semibold text-neutral-900">
+                                {course.batch || "N/A"}
+                            </p>
+                        </div>
+                    </div>
+
                     {error && (
                         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
                             <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 shrink-0" />

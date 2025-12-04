@@ -2,6 +2,40 @@ import api from "@/lib/api";
 import { Enrollment } from "@/types";
 
 export const enrollmentService = {
+  async getUserEnrollments(): Promise<Enrollment[]> {
+    const response = await api.get<{
+      data: Array<{
+        _id: string;
+        student: string;
+        course: { _id: string };
+        status: "active" | "completed" | "dropped";
+        progress: any; // backend uses an array; we only care about percentageCompleted
+        percentageCompleted: number;
+        enrolledAt: string;
+        // other fields omitted
+      }>;
+      meta: {
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+      };
+    }>("/students/enrollments");
+
+    // Normalize backend shape into our Enrollment interface
+    return response.data.data.map((item) => ({
+      _id: item._id,
+      studentId: item.student,
+      courseId: item.course._id,
+      batchId: "", // not provided by this endpoint
+      status: item.status,
+      progress: item.percentageCompleted ?? 0,
+      completedLessons: [], // not provided; can be filled by another endpoint if needed
+      enrollmentDate: item.enrolledAt,
+      completionDate: undefined,
+    }));
+  },
+
   async getEnrollmentById(enrollmentId: string): Promise<Enrollment> {
     const response = await api.get<Enrollment>(
       `/students/enrollments/${enrollmentId}`
