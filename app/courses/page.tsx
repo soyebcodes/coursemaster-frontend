@@ -32,20 +32,26 @@ export default function CoursesPage() {
 
     // Load courses on mount and when filters change
     useEffect(() => {
-        if (!pagination) return; // Guard against undefined pagination during hydration
+        const loadCourses = async () => {
+            try {
+                await dispatch(
+                    fetchCourses({
+                        page: pagination?.page || 1,
+                        limit: pagination?.limit || 12,
+                        search: filters?.search || '',
+                        category: filters?.category || '',
+                        minPrice: filters?.minPrice || undefined,
+                        maxPrice: filters?.maxPrice || undefined,
+                        sort: filters?.sort || 'newest',
+                    })
+                );
+            } catch (error) {
+                console.error('Error loading courses:', error);
+            }
+        };
 
-        dispatch(
-            fetchCourses({
-                page: pagination.page,
-                limit: pagination.limit,
-                search: filters.search,
-                category: filters.category,
-                minPrice: filters.minPrice || undefined,
-                maxPrice: filters.maxPrice || undefined,
-                sort: filters.sort,
-            })
-        );
-    }, [dispatch, pagination?.page, filters]);
+        loadCourses();
+    }, [dispatch, pagination?.page, JSON.stringify(filters)]);
 
     const handleSearch = useCallback(
         (value: string) => {
@@ -192,23 +198,23 @@ export default function CoursesPage() {
                         </div>
 
                         {/* Pagination */}
-                        <div className="flex items-center justify-center gap-2">
+                        <div className="flex items-center justify-center gap-4 mt-8">
                             <Button
                                 variant="outline"
-                                disabled={!pagination || pagination.page === 1 || loading}
-                                onClick={() => dispatch(setPage(pagination?.page ? pagination.page - 1 : 1))}
+                                size="sm"
+                                disabled={pagination.page === 1 || loading}
+                                onClick={() => dispatch(setPage(Math.max(1, pagination.page - 1)))}
                             >
                                 Previous
                             </Button>
                             <div className="text-sm text-neutral-600">
-                                Page {pagination?.page || 1} of {pagination?.pages || 1}
+                                Page {pagination.page} of {Math.max(1, pagination.pages)}
                             </div>
                             <Button
                                 variant="outline"
-                                disabled={
-                                    !pagination || pagination.page === pagination.pages || loading
-                                }
-                                onClick={() => dispatch(setPage(pagination?.page ? pagination.page + 1 : 2))}
+                                size="sm"
+                                disabled={pagination.page >= pagination.pages || loading}
+                                onClick={() => dispatch(setPage(Math.min(pagination.pages, pagination.page + 1)))}
                             >
                                 Next
                             </Button>

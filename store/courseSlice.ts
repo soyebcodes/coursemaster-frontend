@@ -61,6 +61,8 @@ const courseSlice = createSlice({
   name: "courses",
   initialState,
   reducers: {
+    // ... existing reducers ...
+    resetState: () => initialState,
     setSearch: (state, action) => {
       state.filters.search = action.payload;
       state.pagination.page = 1;
@@ -92,8 +94,13 @@ const courseSlice = createSlice({
     });
     builder.addCase(fetchCourses.fulfilled, (state, action) => {
       state.loading = false;
-      state.courses = action.payload.data;
-      state.pagination = action.payload.pagination;
+      state.courses = action.payload.data || [];
+      state.pagination = {
+        page: action.payload.pagination?.page || 1,
+        limit: action.payload.pagination?.limit || 12,
+        total: action.payload.pagination?.total || 0,
+        pages: action.payload.pagination?.pages || 1,
+      };
       state.error = null;
     });
     builder.addCase(fetchCourses.rejected, (state, action) => {
