@@ -6,15 +6,31 @@ import { batchService } from '@/services/batchService';
 import { paymentService } from '@/services/paymentService';
 import { BatchSelection } from './BatchSelection';
 
+interface Batch {
+    name: string;
+    schedule: string;
+    startDate: Date | string;
+    seats: number;
+    currentStudents?: number;
+    maxStudents?: number;
+    id?: string;
+    _id?: string;
+}
+
+interface Course {
+    batches?: Batch[];
+}
+
 interface EnrollmentProps {
     courseId: string;
     courseName: string;
     price: number;
     className?: string;
     onEnrollmentSuccess?: () => Promise<void>;
+    course?: Course;
 }
 
-export function Enrollment({ courseId, courseName, price, className, onEnrollmentSuccess }: EnrollmentProps) {
+export function Enrollment({ courseId, courseName, price, className, onEnrollmentSuccess, course }: EnrollmentProps) {
     const [selectedBatchId, setSelectedBatchId] = useState<string | null>(null);
     const [isEnrolling, setIsEnrolling] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -54,6 +70,7 @@ export function Enrollment({ courseId, courseName, price, className, onEnrollmen
         <div className={`space-y-6 ${className}`}>
             <BatchSelection
                 courseId={courseId}
+                course={course}
                 onSelectBatch={setSelectedBatchId}
                 selectedBatchId={selectedBatchId}
             />

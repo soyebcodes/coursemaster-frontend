@@ -6,7 +6,7 @@ import { useAuth, useAppDispatch } from "@/hooks/useAuth";
 import { restoreAuth } from "@/store/authSlice";
 
 // Routes that don't require authentication
-const PUBLIC_ROUTES = ["/login", "/register", "/"];
+const PUBLIC_ROUTES = ["/login", "/register", "/", "/courses", "/courses/[id]"];
 
 export function Providers({ children }: { children: React.ReactNode }) {
     const router = useRouter();

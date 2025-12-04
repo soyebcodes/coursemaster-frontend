@@ -141,18 +141,15 @@ export default function CourseDetailPage() {
                         <div className="bg-white p-4 rounded-lg">
                             <p className="text-sm text-neutral-600">Category</p>
                             <p className="font-semibold text-neutral-900 capitalize">
-                                {course.category || "General"}
+                                {course.category || course.tags?.[0] || "General"}
                             </p>
                         </div>
                         <div className="bg-white p-4 rounded-lg">
                             <p className="text-sm text-neutral-600">Price</p>
                             <p className="font-semibold text-neutral-900">
-                                {(() => {
-                                    const priceNumber = Number(course.price);
-                                    return Number.isFinite(priceNumber)
-                                        ? `$${priceNumber.toFixed(2)}`
-                                        : "Free";
-                                })()}
+                                {typeof course.price === 'number' ?
+                                    course.price > 0 ? `$${course.price.toFixed(2)}` : 'Free' :
+                                    course.price || 'Free'}
                             </p>
                         </div>
                         <div className="bg-white p-4 rounded-lg">
@@ -170,13 +167,27 @@ export default function CourseDetailPage() {
                     </div>
 
                     {/* Instructor and Batch Details */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
                         <div className="bg-white p-4 rounded-lg">
                             <p className="text-sm text-neutral-600">Instructor</p>
                             <p className="font-semibold text-neutral-900">
                                 {course.instructor || "N/A"}
                             </p>
                         </div>
+                        <div className="bg-white p-4 rounded-lg">
+                            <p className="text-sm text-neutral-600">Batches</p>
+                            <p className="font-semibold text-neutral-900">
+                                {course.batches?.length || 0} available
+                            </p>
+                        </div>
+                        {course.batches?.[0]?.startDate && (
+                            <div className="bg-white p-4 rounded-lg">
+                                <p className="text-sm text-neutral-600">Next Batch</p>
+                                <p className="font-semibold text-neutral-900">
+                                    {new Date(course.batches[0].startDate).toLocaleDateString()}
+                                </p>
+                            </div>
+                        )}
                         <div className="bg-white p-4 rounded-lg">
                             <p className="text-sm text-neutral-600">Batch</p>
                             <p className="font-semibold text-neutral-900">
@@ -207,12 +218,13 @@ export default function CourseDetailPage() {
                                     Continue Learning
                                 </Button>
                             </Link>
-                        ) : (
+                        ) : course && (
                             <Enrollment
                                 courseId={courseId}
                                 courseName={course.title}
                                 price={typeof course.price === 'number' ? course.price : parseFloat(course.price) || 0}
                                 onEnrollmentSuccess={handleEnrollmentSuccess}
+                                course={course}
                             />
                         )}
                     </div>

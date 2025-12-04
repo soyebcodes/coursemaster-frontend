@@ -1,7 +1,14 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { CourseCard } from "@/components/CourseCard";
+import { courseService } from "@/services/courseService";
 
-export default function Home() {
+export default async function Home() {
+  // Fetch featured courses
+  const featuredCourses = await courseService.getCourses({
+    limit: 6, // Show 6 featured courses
+    sort: 'newest'
+  });
   return (
     <main className="min-h-screen">
       {/* Hero Section */}
@@ -68,6 +75,43 @@ export default function Home() {
                 Create Account
               </Button>
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Courses Section */}
+      <section className="py-16 px-4 max-w-7xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold mb-4">Featured Courses</h2>
+          <p className="text-neutral-600 max-w-2xl mx-auto">
+            Explore our most popular courses and start your learning journey today
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {featuredCourses.data.slice(0, 6).map((course) => (
+            <CourseCard key={course._id} course={course} />
+          ))}
+        </div>
+
+        <div className="text-center mt-10">
+          <Link href="/courses">
+            <Button variant="outline" size="lg" className="rounded-lg">
+              View All Courses
+            </Button>
+          </Link>
+        </div>
+      </section>
+
+      {/* Testimonial Section */}
+      <section className="bg-neutral-50 py-16 px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl font-bold mb-12">What Our Students Say</h2>
+          <div className="bg-white p-8 rounded-lg shadow-sm border border-neutral-200">
+            <blockquote className="text-xl italic text-neutral-700 mb-4">
+              "The courses on CourseMaster have helped me advance my career significantly. The quality of instruction is outstanding!"
+            </blockquote>
+            <div className="font-medium">- Alex Johnson, Web Developer</div>
           </div>
         </div>
       </section>
