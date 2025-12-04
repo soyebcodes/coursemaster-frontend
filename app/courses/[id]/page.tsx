@@ -8,11 +8,12 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { courseService } from "@/services/courseService";
 import { enrollmentService } from "@/services/enrollmentService";
-import { Course, Enrollment } from "@/types";
+import { Course, Enrollment as EnrollmentType, User } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, BookOpen, Play, FileText, HelpCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { Enrollment } from "@/components/Enrollment";
 
 export default function CourseDetailPage() {
     const params = useParams();
@@ -21,9 +22,10 @@ export default function CourseDetailPage() {
     const courseId = params.id as string;
 
     const [course, setCourse] = useState<Course | null>(null);
-    const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
+    const [enrollment, setEnrollment] = useState<EnrollmentType | null>(null);
+    // Add a default empty string for the course image URL
+    const [courseImage, setCourseImage] = useState<string>("");
     const [loading, setLoading] = useState(true);
-    const [enrolling, setEnrolling] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     // Load course and enrollment data
@@ -33,12 +35,16 @@ export default function CourseDetailPage() {
                 setLoading(true);
                 const courseData = await courseService.getCourseById(courseId);
                 setCourse(courseData);
+                // Set course image from the first lesson's video thumbnail if available
+                if (courseData.lessons?.[0]?.videoUrl) {
+                    setCourseImage(courseData.lessons[0].videoUrl);
+                }
 
                 // Try to get enrollment for this user if logged in
-                if (user?.id) {
+                if (user?._id) {
                     try {
                         const enrollments = await enrollmentService.getUserEnrollments();
-                        const userEnrollment = enrollments.find(e => e.courseId === courseId);
+                        const userEnrollment = enrollments.find((e: EnrollmentType) => e.courseId === courseId);
                         setEnrollment(userEnrollment || null);
                     } catch (err) {
                         // User might not be enrolled yet
@@ -59,18 +65,14 @@ export default function CourseDetailPage() {
         }
     }, [courseId, user?.id]);
 
-    const handleEnroll = async () => {
+    const handleEnrollmentSuccess = async () => {
+        // Reload enrollment data after successful enrollment
         try {
-            setEnrolling(true);
-            await enrollmentService.enrollCourse(courseId);
-            // Reload enrollment data
             const enrollments = await enrollmentService.getUserEnrollments();
             const userEnrollment = enrollments.find(e => e.courseId === courseId);
             setEnrollment(userEnrollment || null);
-        } catch (err: any) {
-            setError(err?.response?.data?.message || "Failed to enroll in course");
-        } finally {
-            setEnrolling(false);
+        } catch (err) {
+            console.error('Error refreshing enrollment:', err);
         }
     };
 
@@ -118,12 +120,16 @@ export default function CourseDetailPage() {
 
                 {/* Course Header */}
                 <div className="mb-8">
-                    {course.imageUrl && (
-                        <img
-                            src={course.imageUrl}
-                            alt={course.title}
-                            className="w-full h-80 object-cover rounded-lg mb-6"
-                        />
+                    {/* Course thumbnail - using the first lesson's video thumbnail if available */}
+                    {course.lessons?.[0]?.videoUrl && (
+                        <div className="w-full h-80 bg-gray-200 rounded-lg mb-6 overflow-hidden">
+                            <video
+                                src={course.lessons[0].videoUrl}
+                                className="w-full h-full object-cover"
+                                poster=""
+                                controls
+                            />
+                        </div>
                     )}
                     <h1 className="text-4xl font-bold text-neutral-900 mb-2">
                         {course.title}
@@ -174,7 +180,7 @@ export default function CourseDetailPage() {
                         <div className="bg-white p-4 rounded-lg">
                             <p className="text-sm text-neutral-600">Batch</p>
                             <p className="font-semibold text-neutral-900">
-                                {course.batch || "N/A"}
+                                {course.batches?.[0]?.name || "N/A"}
                             </p>
                         </div>
                     </div>
@@ -186,38 +192,28 @@ export default function CourseDetailPage() {
                         </div>
                     )}
 
-                    {/* Action Button */}
-                    <div className="flex gap-3">
+                    {/* Enrollment Component */}
+                    <div className="mt-6">
                         {!user ? (
-                            <Link href="/login" className="flex-1">
+                            <Link href="/login">
                                 <Button className="w-full">
                                     Log In to Enroll
                                 </Button>
                             </Link>
                         ) : enrollment ? (
-                            <>
-                                <Link href={`/courses/${courseId}/learn`} className="flex-1">
-                                    <Button className="w-full">
-                                        <Play className="w-4 h-4 mr-2" />
-                                        Start Learning
-                                    </Button>
-                                </Link>
-                            </>
+                            <Link href={`/courses/${courseId}/learn`} className="block">
+                                <Button className="w-full">
+                                    <Play className="w-4 h-4 mr-2" />
+                                    Continue Learning
+                                </Button>
+                            </Link>
                         ) : (
-                            <Button
-                                onClick={handleEnroll}
-                                disabled={enrolling}
-                                className="flex-1"
-                            >
-                                {enrolling ? (
-                                    <>
-                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                        Enrolling...
-                                    </>
-                                ) : (
-                                    "Enroll Now"
-                                )}
-                            </Button>
+                            <Enrollment
+                                courseId={courseId}
+                                courseName={course.title}
+                                price={typeof course.price === 'number' ? course.price : parseFloat(course.price) || 0}
+                                onEnrollmentSuccess={handleEnrollmentSuccess}
+                            />
                         )}
                     </div>
                 </div>
@@ -301,9 +297,11 @@ export default function CourseDetailPage() {
                                             <h4 className="font-medium text-neutral-900">
                                                 {lesson.title}
                                             </h4>
-                                            <p className="text-sm text-neutral-600">
-                                                {lesson.description}
-                                            </p>
+                                            {lesson.content && (
+                                                <p className="text-sm text-neutral-600 line-clamp-2">
+                                                    {lesson.content}
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
                                 ))}
