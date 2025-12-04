@@ -66,17 +66,17 @@ export const adminService = {
     if (filters?.studentId) params.append("studentId", filters.studentId);
     if (filters?.status) params.append("status", filters.status);
 
-    const response = await api.get<Enrollment[]>(
+    const response = await api.get<{ data: Enrollment[] }>(
       `/admin/enrollments?${params.toString()}`
     );
-    return response.data;
+    return response.data.data;
   },
 
   async getEnrollmentsByCourse(courseId: string): Promise<Enrollment[]> {
-    const response = await api.get<Enrollment[]>(
+    const response = await api.get<{ data: Enrollment[] }>(
       `/admin/enrollments?courseId=${courseId}`
     );
-    return response.data;
+    return response.data.data;
   },
 
   async createCourse(payload: CreateCoursePayload): Promise<Course> {

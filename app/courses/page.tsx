@@ -24,12 +24,16 @@ import {
 import { Search, Filter } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
+export const dynamic = "force-dynamic";
+
 export default function CoursesPage() {
     const dispatch = useAppDispatch();
     const { courses, loading, pagination, filters } = useCourses();
 
     // Load courses on mount and when filters change
     useEffect(() => {
+        if (!pagination) return; // Guard against undefined pagination during hydration
+
         dispatch(
             fetchCourses({
                 page: pagination.page,
@@ -41,7 +45,7 @@ export default function CoursesPage() {
                 sort: filters.sort,
             })
         );
-    }, [dispatch, pagination.page, filters]);
+    }, [dispatch, pagination?.page, filters]);
 
     const handleSearch = useCallback(
         (value: string) => {
@@ -90,7 +94,7 @@ export default function CoursesPage() {
                                 <Input
                                     placeholder="Search by title or description..."
                                     className="pl-10"
-                                    value={filters.search}
+                                    value={filters?.search || ""}
                                     onChange={(e) => handleSearch(e.target.value)}
                                     disabled={loading}
                                 />
@@ -103,15 +107,17 @@ export default function CoursesPage() {
                                 Category
                             </label>
                             <Select
-                                value={filters.category}
-                                onValueChange={handleCategoryChange}
+                                value={filters?.category || "all"}
+                                onValueChange={(value) =>
+                                    handleCategoryChange(value === "all" ? "" : value)
+                                }
                                 disabled={loading}
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder="All Categories" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="">All Categories</SelectItem>
+                                    <SelectItem value="all">All Categories</SelectItem>
                                     <SelectItem value="programming">Programming</SelectItem>
                                     <SelectItem value="design">Design</SelectItem>
                                     <SelectItem value="business">Business</SelectItem>
@@ -127,7 +133,7 @@ export default function CoursesPage() {
                                 Sort By
                             </label>
                             <Select
-                                value={filters.sort}
+                                value={filters?.sort || "newest"}
                                 onValueChange={(value) =>
                                     handleSortChange(value as "price_asc" | "price_desc" | "newest")
                                 }
@@ -189,20 +195,20 @@ export default function CoursesPage() {
                         <div className="flex items-center justify-center gap-2">
                             <Button
                                 variant="outline"
-                                disabled={pagination.page === 1 || loading}
-                                onClick={() => dispatch(setPage(pagination.page - 1))}
+                                disabled={!pagination || pagination.page === 1 || loading}
+                                onClick={() => dispatch(setPage(pagination?.page ? pagination.page - 1 : 1))}
                             >
                                 Previous
                             </Button>
                             <div className="text-sm text-neutral-600">
-                                Page {pagination.page} of {pagination.pages}
+                                Page {pagination?.page || 1} of {pagination?.pages || 1}
                             </div>
                             <Button
                                 variant="outline"
                                 disabled={
-                                    pagination.page === pagination.pages || loading
+                                    !pagination || pagination.page === pagination.pages || loading
                                 }
-                                onClick={() => dispatch(setPage(pagination.page + 1))}
+                                onClick={() => dispatch(setPage(pagination?.page ? pagination.page + 1 : 2))}
                             >
                                 Next
                             </Button>

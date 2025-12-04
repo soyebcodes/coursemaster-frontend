@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
@@ -28,6 +30,7 @@ export default function AdminEnrollmentsPage() {
             try {
                 setLoading(true);
                 const data = await adminService.getAllEnrollments();
+                console.log("Enrollments data received:", data);
                 setEnrollments(data);
             } catch (err) {
                 setError(err instanceof Error ? err.message : "Failed to load enrollments");
