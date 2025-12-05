@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AlertCircle } from "lucide-react";
 import { useAppDispatch } from "@/hooks/useAuth";
 import { login } from "@/store/authSlice";
 
@@ -32,6 +33,7 @@ export default function LoginPage() {
     const router = useRouter();
     const dispatch = useAppDispatch();
     const [isLoading, setIsLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const form = useForm<LoginFormValues>({
         resolver: zodResolver(loginSchema),
@@ -43,13 +45,21 @@ export default function LoginPage() {
 
     async function onSubmit(values: LoginFormValues) {
         setIsLoading(true);
+        setErrorMessage(null);
         try {
             const result = await dispatch(login(values));
-            if (result.payload) {
+
+            // Check if login was successful
+            if (result.type === "auth/login/fulfilled" && result.payload) {
+                // Login successful, redirect to dashboard
                 router.push("/dashboard");
+            } else if (result.type === "auth/login/rejected") {
+                // Login failed, show error
+                setErrorMessage(result.payload as string || "Login failed. Please check your credentials and try again.");
             }
         } catch (error) {
             console.error("Login failed:", error);
+            setErrorMessage("An unexpected error occurred. Please try again.");
         } finally {
             setIsLoading(false);
         }
@@ -65,6 +75,12 @@ export default function LoginPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
+                    {errorMessage && (
+                        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                            <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 shrink-0" />
+                            <p className="text-red-800 text-sm">{errorMessage}</p>
+                        </div>
+                    )}
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                             <FormField

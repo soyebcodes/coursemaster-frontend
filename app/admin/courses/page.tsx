@@ -143,7 +143,7 @@ export default function AdminCoursesPage() {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-sm text-neutral-600">
-                                            ${course.price.toFixed(2)}
+                                            ${typeof course.price === 'number' ? course.price.toFixed(2) : parseFloat(course.price).toFixed(2)}
                                         </td>
                                         <td className="px-6 py-4 text-sm text-neutral-600">
                                             {course.lessons?.length || 0}

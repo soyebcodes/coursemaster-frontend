@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/select";
 import { useAppDispatch } from "@/hooks/useAuth";
 import { register as registerUser } from "@/store/authSlice";
+import { AlertCircle } from "lucide-react";
 
 const registerSchema = z
     .object({
@@ -47,6 +48,7 @@ export default function RegisterPage() {
     const router = useRouter();
     const dispatch = useAppDispatch();
     const [isLoading, setIsLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const form = useForm<RegisterFormValues>({
         resolver: zodResolver(registerSchema),
@@ -61,15 +63,23 @@ export default function RegisterPage() {
 
     async function onSubmit(values: RegisterFormValues) {
         setIsLoading(true);
+        setErrorMessage(null);
         try {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { confirmPassword, ...registerData } = values;
             const result = await dispatch(registerUser(registerData));
-            if (result.payload) {
+
+            // Check if registration was successful
+            if (result.type === "auth/register/fulfilled" && result.payload) {
+                // Registration successful, redirect to dashboard
                 router.push("/dashboard");
+            } else if (result.type === "auth/register/rejected") {
+                // Registration failed, show error
+                setErrorMessage(result.payload as string || "Registration failed. Please try again.");
             }
         } catch (error) {
             console.error("Registration failed:", error);
+            setErrorMessage("An unexpected error occurred. Please try again.");
         } finally {
             setIsLoading(false);
         }
@@ -85,6 +95,12 @@ export default function RegisterPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
+                    {errorMessage && (
+                        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                            <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 shrink-0" />
+                            <p className="text-red-800 text-sm">{errorMessage}</p>
+                        </div>
+                    )}
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                             <FormField

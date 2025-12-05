@@ -35,6 +35,7 @@ export function Navbar() {
                 { href: "/admin/courses", label: "Courses" },
                 { href: "/admin/enrollments", label: "Enrollments" },
                 { href: "/admin/assignments", label: "Assignments" },
+                { href: "/admin/quizzes", label: "Quizzes" },
             ]
             : [
                 { href: "/", label: "Home" },

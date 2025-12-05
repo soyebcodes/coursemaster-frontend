@@ -1,5 +1,19 @@
 import api from "@/lib/api";
-import { Quiz, QuizAttempt } from "@/types";
+import { Quiz, QuizAttempt, QuizQuestion } from "@/types";
+
+export interface CreateQuizPayload {
+  courseId: string;
+  title: string;
+  description: string;
+  passingScore: number;
+  questions: Array<{
+    question: string;
+    options: Array<{
+      text: string;
+      isCorrect: boolean;
+    }>;
+  }>;
+}
 
 export interface SubmitQuizPayload {
   quizId: string;
@@ -8,7 +22,7 @@ export interface SubmitQuizPayload {
 
 export const quizService = {
   async getQuizzesByCourse(courseId: string): Promise<Quiz[]> {
-    const response = await api.get<Quiz[]>(`/quizzes?courseId=${courseId}`);
+    const response = await api.get<Quiz[]>(`/courses/${courseId}/quizzes`);
     return response.data;
   },
 
@@ -42,6 +56,12 @@ export const quizService = {
     const response = await api.get<QuizAttempt[]>(
       `/quizzes/${quizId}/attempts`
     );
+    return response.data;
+  },
+
+  async createQuiz(payload: CreateQuizPayload): Promise<Quiz> {
+    const { courseId, ...quizData } = payload;
+    const response = await api.post<Quiz>(`/courses/${courseId}/quizzes`, quizData);
     return response.data;
   },
 };

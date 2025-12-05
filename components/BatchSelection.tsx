@@ -2,30 +2,27 @@
 
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-
-interface Batch {
-    name: string;
-    schedule: string;
-    startDate: Date | string;
-    seats: number;
-    currentStudents?: number;
-    maxStudents?: number;
-    id?: string;
-    _id?: string;
-}
+import type { Course, Batch as BatchType } from '@/types';
 
 interface BatchSelectionProps {
     courseId: string;
     onSelectBatch: (batchId: string) => void;
     selectedBatchId?: string;
-    // Add course prop to receive the course data directly
-    course?: {
-        batches?: Array<Batch & { _id?: string }>;
-    };
+    course?: Course;
+}
+
+interface BatchWithId {
+    _id: string;
+    name: string;
+    startDate: string;
+    endDate: string;
+    id?: string;
+    currentStudents?: number;
+    maxStudents?: number;
 }
 
 export function BatchSelection({ courseId, onSelectBatch, selectedBatchId, course }: BatchSelectionProps) {
-    const [batches, setBatches] = useState<Batch[]>([]);
+    const [batches, setBatches] = useState<BatchWithId[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -41,8 +38,7 @@ export function BatchSelection({ courseId, onSelectBatch, selectedBatchId, cours
                         ...batch,
                         id: batch._id || `batch-${index}`, // Use _id or create a fallback ID
                         currentStudents: 0, // Default value
-                        maxStudents: batch.seats || 25, // Use seats from the data
-                        startDate: typeof batch.startDate === 'string' ? batch.startDate : batch.startDate.toISOString(),
+                        maxStudents: 25, // Default value
                         endDate: new Date(
                             new Date(batch.startDate).getTime() + (30 * 24 * 60 * 60 * 1000) // Add 30 days as end date
                         ).toISOString()
@@ -91,8 +87,8 @@ export function BatchSelection({ courseId, onSelectBatch, selectedBatchId, cours
                         <div
                             key={batchId}
                             className={`p-4 border rounded-lg cursor-pointer transition-colors ${selectedBatchId === batchId
-                                    ? 'border-blue-500 bg-blue-50'
-                                    : 'border-gray-200 hover:bg-gray-50'
+                                ? 'border-blue-500 bg-blue-50'
+                                : 'border-gray-200 hover:bg-gray-50'
                                 }`}
                             onClick={() => onSelectBatch(batchId)}
                         >
@@ -103,7 +99,6 @@ export function BatchSelection({ courseId, onSelectBatch, selectedBatchId, cours
                                         {format(new Date(batch.startDate), 'MMM d, yyyy')} -{' '}
                                         {format(new Date(batch.endDate), 'MMM d, yyyy')}
                                     </p>
-                                    <p className="text-sm text-gray-600">{batch.schedule}</p>
                                 </div>
                                 <div className="text-sm text-gray-600">
                                     {batch.currentStudents || 0}/{batch.maxStudents || 25} students

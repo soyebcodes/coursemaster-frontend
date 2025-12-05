@@ -55,9 +55,10 @@ export const enrollmentService = {
     return response.data;
   },
 
-  async enrollCourse(courseId: string): Promise<Enrollment> {
+  async enrollCourse(courseId: string, batchId?: string): Promise<Enrollment> {
     const response = await api.post<Enrollment>(
-      `/students/enrollments/${courseId}`
+      `/students/enrollments/${courseId}`,
+      { batchId }
     );
     return response.data;
   },

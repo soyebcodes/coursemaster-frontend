@@ -2,13 +2,13 @@
 
 export const dynamic = "force-dynamic";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { courseService } from "@/services/courseService";
 import { enrollmentService } from "@/services/enrollmentService";
-import { Course, Enrollment as EnrollmentType, User } from "@/types";
+import { Course, Enrollment as EnrollmentType } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, BookOpen, Play, FileText, HelpCircle, Loader2 } from "lucide-react";
@@ -23,10 +23,31 @@ export default function CourseDetailPage() {
 
     const [course, setCourse] = useState<Course | null>(null);
     const [enrollment, setEnrollment] = useState<EnrollmentType | null>(null);
-    // Add a default empty string for the course image URL
-    const [courseImage, setCourseImage] = useState<string>("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    // Load enrollment data for the current user
+    const loadUserEnrollment = useCallback(async () => {
+        if (!user?._id) {
+            setEnrollment(null);
+            return;
+        }
+        try {
+            const enrollments = await enrollmentService.getUserEnrollments();
+            const userEnrollment = enrollments.find((e: EnrollmentType) => e.courseId === courseId);
+            setEnrollment(userEnrollment || null);
+        } catch (err) {
+            // User might not be enrolled yet
+            console.error("Failed to load enrollments:", err);
+            setEnrollment(null);
+        }
+    }, [user?._id, courseId]);
+
+    // Handle successful enrollment
+    const handleEnrollmentSuccess = async () => {
+        // Refresh enrollment data after successful enrollment
+        await loadUserEnrollment();
+    };
 
     // Load course and enrollment data
     useEffect(() => {
@@ -35,24 +56,12 @@ export default function CourseDetailPage() {
                 setLoading(true);
                 const courseData = await courseService.getCourseById(courseId);
                 setCourse(courseData);
-                // Set course image from the first lesson's video thumbnail if available
-                if (courseData.lessons?.[0]?.videoUrl) {
-                    setCourseImage(courseData.lessons[0].videoUrl);
-                }
 
                 // Try to get enrollment for this user if logged in
-                if (user?._id) {
-                    try {
-                        const enrollments = await enrollmentService.getUserEnrollments();
-                        const userEnrollment = enrollments.find((e: EnrollmentType) => e.courseId === courseId);
-                        setEnrollment(userEnrollment || null);
-                    } catch (err) {
-                        // User might not be enrolled yet
-                        setEnrollment(null);
-                    }
-                }
+                await loadUserEnrollment();
                 setError(null);
-            } catch (err: any) {
+            } catch (error) {
+                const err = error as typeof error & { response?: { data?: { message?: string } } };
                 setError(err?.response?.data?.message || "Failed to load course");
                 console.error(err);
             } finally {
@@ -63,18 +72,7 @@ export default function CourseDetailPage() {
         if (courseId) {
             loadData();
         }
-    }, [courseId, user?.id]);
-
-    const handleEnrollmentSuccess = async () => {
-        // Reload enrollment data after successful enrollment
-        try {
-            const enrollments = await enrollmentService.getUserEnrollments();
-            const userEnrollment = enrollments.find(e => e.courseId === courseId);
-            setEnrollment(userEnrollment || null);
-        } catch (err) {
-            console.error('Error refreshing enrollment:', err);
-        }
-    };
+    }, [courseId, user?._id, loadUserEnrollment]);
 
     if (loading) {
         return (
@@ -302,10 +300,10 @@ export default function CourseDetailPage() {
                                         key={lesson._id}
                                         className="flex items-start gap-3 p-3 bg-neutral-50 rounded-lg"
                                     >
-                                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-semibold">
+                                        <div className="shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-semibold">
                                             {index + 1}
                                         </div>
-                                        <div className="flex-grow">
+                                        <div className="grow">
                                             <h4 className="font-medium text-neutral-900">
                                                 {lesson.title}
                                             </h4>
