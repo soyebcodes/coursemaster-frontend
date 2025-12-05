@@ -25,19 +25,19 @@ export const courseService = {
     if (params.sort) queryParams.append("sort", params.sort);
 
     const response = await api.get<CoursesResponse>(
-      `/courses?${queryParams.toString()}`
+      `courses?${queryParams.toString()}`
     );
     return response.data;
   },
 
   async getCourseById(courseId: string): Promise<Course> {
-    const response = await api.get<Course>(`/courses/${courseId}`);
+    const response = await api.get<Course>(`courses/${courseId}`);
     return response.data;
   },
 
   async enrollCourse(courseId: string): Promise<Enrollment> {
     const response = await api.post<Enrollment>(
-      `/students/enrollments/${courseId}`
+      `students/enrollments/${courseId}`
     );
     return response.data;
   },
